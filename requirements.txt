@@ -1,0 +1,14 @@
+streamlit==1.38.0
+langchain>=0.3.12,<0.4
+langgraph==0.2.33
+torch>=2.0.0,<3.0.0
+sentence-transformers==3.0.1
+faiss-cpu>=1.8.0
+rank-bm25==0.2.2
+scikit-learn==1.5.2
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3
+pydantic>=2.0.0,<3
+diskcache>=5.6.0
+python-dotenv>=1.0.0
+litellm>=1.46.0
