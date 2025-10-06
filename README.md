@@ -2,15 +2,6 @@
 
 A fast, reliable RAG system for event venue recommendations using Streamlit and LangGraph.
 
-## Features
-- **BM25 Search**: Fast keyword-based retrieval (FAISS disabled for stability)
-- **LangGraph Pipeline**: Slot extraction, retrieval, validation, and composition
-- **Smart Validation**: Missing info detection and staleness checks (14-day threshold)
-- **Context-Aware Responses**: Natural venue recommendations with citations
-- **Filter Support**: City, occasion, headcount, budget, and date filters
-- **Vendor Deduplication**: Ensures diverse results from different vendors
-- **14 Sample Venues**: Dubai and Abu Dhabi venues with diverse options
-
 ## Quick Start
 
 ### Prerequisites
@@ -35,11 +26,6 @@ A fast, reliable RAG system for event venue recommendations using Streamlit and 
 
 The app will be available at `http://localhost:8501`
 
-### Getting an OpenAI API Key
-1. Go to [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Create a new API key
-3. Add it to your environment
-
 ## Project Structure
 - `app.py` – Streamlit UI
 - `rag/` – Core RAG pipeline
@@ -51,32 +37,13 @@ The app will be available at `http://localhost:8501`
   - `cache.py` – TTL caching
   - `utils.py` – Helper functions
 - `data/` – Sample venue datasets
-  - `vendors.csv` – Basic dataset (14 unique venues)
-  - `vendors_extended.csv` – Extended dataset (24 venues, includes vendor duplicates for testing deduplication)
+  - `vendors.csv` – Basic dataset
 
 ## Usage
 Ask natural language questions like:
 - "yacht party in Dubai for 25 people"
 - "luxury wedding venue in Abu Dhabi under 50k"
 - "beach club for corporate event"
-
-**📖 Demo Resources:**
-- **[DEMO_GUIDE.md](DEMO_GUIDE.md)** - Comprehensive testing scenarios organized by feature
-- **[DEMO_CHEAT_SHEET.md](DEMO_CHEAT_SHEET.md)** - Quick reference for live demos (copy-paste queries)
-
-### Quick Demo Queries
-
-| Feature | Query | What it Demonstrates |
-|---------|-------|---------------------|
-| Basic Search | `"yacht party in Dubai"` | BM25 search + city filter |
-| Headcount Filter | `"venue for 25 people"` | Capacity-based filtering |
-| Budget Filter | `"corporate event under 20k AED"` | Price range filtering |
-| Vendor Diversity | `"party venue in Dubai"` | Deduplication (3 unique vendors) |
-| Staleness | `"wedding in Abu Dhabi"` | 14-day freshness check |
-| Natural Language | `"Hey, sunset vibe for 20 friends DXB"` | Conversational slot extraction |
-| Caching | Repeat any query twice | <1s cached response |
-| Citations | Any query | [#ID] references in response |
-
 
 
 ## Summary: What's Ready vs What's Next
