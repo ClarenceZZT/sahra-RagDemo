@@ -76,20 +76,20 @@ async def node_intent_slots(state: RAGState):
         
         print(f"   Validated slots: {slots}")
         
-        # Override with applied filters if they exist and query doesn't specify
+        # Applied filters OVERRIDE query-extracted slots (user's explicit filters take precedence)
         if applied_filters:
-            if not slots.get("city") and applied_filters.get("city"):
+            if applied_filters.get("city"):
                 slots["city"] = applied_filters["city"]
-            if not slots.get("occasion") and applied_filters.get("occasion"):
+            if applied_filters.get("occasion"):
                 slots["occasion"] = applied_filters["occasion"]
-            if not slots.get("headcount") and applied_filters.get("headcount", 0) > 0:
+            if applied_filters.get("headcount", 0) > 0:
                 slots["headcount"] = applied_filters["headcount"]
-            if not slots.get("budget") and applied_filters.get("budget", 0) > 0:
+            if applied_filters.get("budget", 0) > 0:
                 slots["budget"] = applied_filters["budget"]
-            if not slots.get("date") and applied_filters.get("date"):
+            if applied_filters.get("date"):
                 slots["date"] = applied_filters["date"]
         
-        print(f"   Final slots (after filter merge): {slots}")
+        print(f"   Final slots (after filter override): {slots}")
                 
     except asyncio.TimeoutError:
         print(f"   ⚠️ LLM call timed out after {settings.tool_timeout_s}s, using fallback")
@@ -161,27 +161,85 @@ async def node_validate(state: RAGState):
     # Lightweight, rule-based validation
     slots = state.get("slots", {})
     docs = state.get("docs", [])
+    applied_filters = state.get("applied_filters") or {}
     
-    print(f"   Docs count: {len(docs)}")
+    print(f"   Docs count (before filter): {len(docs)}")
     print(f"   Slots: {slots}")
+    print(f"   Applied filters: {applied_filters}")
+    
+    # CRITICAL: Filter out documents that don't match applied_filters
+    # This is a safety net to ensure webpage filters are strictly enforced
+    if applied_filters and docs:
+        filtered_docs = []
+        for doc in docs:
+            meta = doc.get("meta", {})
+            passes = True
+            
+            # Check city filter
+            if applied_filters.get("city"):
+                if meta.get("city", "").lower() != applied_filters["city"].lower():
+                    passes = False
+                    print(f"   ❌ Filtered out {meta.get('id')}: city mismatch (doc={meta.get('city')}, filter={applied_filters['city']})")
+            
+            # Check occasion filter
+            if applied_filters.get("occasion") and passes:
+                occasions = [o.lower() for o in meta.get("occasion", [])]
+                if applied_filters["occasion"].lower() not in occasions:
+                    passes = False
+                    print(f"   ❌ Filtered out {meta.get('id')}: occasion mismatch (doc={meta.get('occasion')}, filter={applied_filters['occasion']})")
+            
+            # Check headcount filter
+            if applied_filters.get("headcount", 0) > 0 and passes:
+                hmin = meta.get("headcount_min", 0)
+                hmax = meta.get("headcount_max", 10**9)
+                print(hmin, hmax)
+                if not (hmin <= applied_filters["headcount"] <= hmax):
+                    passes = False
+                    print(f"   ❌ Filtered out {meta.get('id')}: headcount out of range (doc={hmin}-{hmax}, filter={applied_filters['headcount']})")
+            
+            # Check budget filter
+            if applied_filters.get("budget", 0) > 0 and passes:
+                pmin = meta.get("price_min", 0)
+                pmax = meta.get("price_max", 10**12)
+                if not (pmin <= applied_filters["budget"] <= pmax):
+                    passes = False
+                    print(f"   ❌ Filtered out {meta.get('id')}: budget out of range (doc={pmin}-{pmax}, filter={applied_filters['budget']})")
+            
+            if passes:
+                filtered_docs.append(doc)
+        
+        print(f"   Docs count (after filter): {len(filtered_docs)} (removed {len(docs) - len(filtered_docs)})")
+        docs = filtered_docs
     
     # Smart validation: only flag truly missing critical info
+    # Check BOTH slots (from query) AND applied_filters (from sidebar)
     issues = []
+    
+    # Helper function to check if a field is set either in slots or applied filters
+    def has_value(field_name):
+        slot_value = slots.get(field_name)
+        filter_value = applied_filters.get(field_name)
+        
+        # For numeric fields (headcount, budget), check if > 0
+        if field_name in ["headcount", "budget"]:
+            return (slot_value and slot_value > 0) or (filter_value and filter_value > 0)
+        # For string fields (city, occasion), check if non-empty
+        return bool(slot_value) or bool(filter_value)
     
     # If we have no results, suggest key filters to narrow down
     if not docs:
         print("   Validation strategy: NO RESULTS - suggest critical filters")
-        if not slots.get("city"):
+        if not has_value("city"):
             issues.append("city")
-        if not slots.get("occasion"):
+        if not has_value("occasion"):
             issues.append("occasion")
     # If we have results but they're ambiguous, suggest refinement
     elif len(docs) > 5:
         print("   Validation strategy: MANY RESULTS - suggest refinement filters")
         # Only suggest helpful filters that would narrow results
-        if not slots.get("city"):
+        if not has_value("city"):
             issues.append("city")
-        if not slots.get("headcount"):
+        if not has_value("headcount"):
             issues.append("headcount")
     else:
         print("   Validation strategy: GOOD RESULTS - no suggestions needed")
@@ -206,7 +264,7 @@ async def node_validate(state: RAGState):
     
     print("✅ CHECKPOINT 3: Validation - COMPLETE")
     print()
-    return {"validation": validation}
+    return {"validation": validation, "docs": docs}
 
 async def node_compose(state: RAGState):
     print("=" * 60)

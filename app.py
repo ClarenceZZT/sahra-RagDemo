@@ -17,14 +17,14 @@ if api_key:
 st.set_page_config(page_title="SahraEvent RAG Demo", page_icon="🎉", layout="wide")
 st.title("🎉 SahraEvent — Fast, Reliable, Low-Cost RAG")
 
-with st.expander("ℹ️ How this demo is built"):
-    st.markdown("""
-- BM25 keyword search with metadata filters (FAISS disabled for stability)
-- LangGraph orchestration: slot extraction → retrieval → validation → composition
-- Dual index architecture (stable + hot) with 14-day staleness detection
-- Tiered models via `litellm` — set `OPENAI_API_KEY` in your environment
-- TTL-based caching for queries and completions
-    """)
+# with st.expander("ℹ️ How this demo is built"):
+#     st.markdown("""
+# - BM25 keyword search with metadata filters (FAISS disabled for stability)
+# - LangGraph orchestration: slot extraction → retrieval → validation → composition
+# - Dual index architecture (stable + hot) with 14-day staleness detection
+# - Tiered models via `litellm` — set `OPENAI_API_KEY` in your environment
+# - TTL-based caching for queries and completions
+#     """)
 
 # Initialize session state
 def init_session_state():
