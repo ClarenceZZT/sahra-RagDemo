@@ -2,6 +2,9 @@
 
 A fast, reliable RAG system for event venue recommendations using Streamlit and LangGraph.
 
+![](pictures/interface.png)
+![](pictures/log.png)
+
 ## Quick Start
 
 ### Prerequisites
