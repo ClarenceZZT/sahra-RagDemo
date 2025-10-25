@@ -65,7 +65,6 @@ Ask natural language questions like:
 - 🟡 SQLite instead of Postgres (scalable to ~10K venues)
 - 🟡 In-memory cache instead of Redis (single instance only)
 - 🟡 Streamlit UI instead of FastAPI (demo/internal use)
-- 🟡 Embeddings/FAISS disabled (BM25-only)
 - 🟡 Reranker ready but not active
 
 ### ❌ **Not Yet Implemented**
